@@ -1,6 +1,13 @@
 import pandas as pd
 
 
+def drop_id_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
+    """Drop any column whose name contains 'id' (case-insensitive). Returns cleaned df and dropped column names."""
+    id_cols = [c for c in df.columns if "id" in c.lower()]
+    df = df.drop(columns=id_cols)
+    return df, id_cols
+
+
 def remove_duplicates(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     """Remove duplicate rows. Returns cleaned df and count removed."""
     before = len(df)

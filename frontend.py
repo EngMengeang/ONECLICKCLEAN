@@ -1,7 +1,7 @@
 ﻿import streamlit as st
 import pandas as pd
 
-from cleaner import remove_duplicates, handle_missing, remove_outliers, fix_categorical
+from cleaner import drop_id_columns, remove_duplicates, handle_missing, remove_outliers, fix_categorical
 from visualizer import draw_boxplots
 from code_generator import generate_cleaning_script
 
@@ -25,12 +25,13 @@ with st.sidebar:
     st.markdown("""
     1. 📂 Upload & Preview
     2. 🔍 Dataset Overview
-    3. 🗑️ Remove Duplicates
-    4. 🩹 Handle Missing Values
-    5. 📦 Detect & Remove Outliers
-    6. 🔤 Fix Categorical Columns
-    7. ⬇️ Download Cleaned CSV
-    8. 🐍 Get Python Script
+    3. 🪪 Drop ID Columns
+    4. 🗑️ Remove Duplicates
+    5. 🩹 Handle Missing Values
+    6. 📦 Detect & Remove Outliers
+    7. 🔤 Fix Categorical Columns
+    8. ⬇️ Download Cleaned CSV
+    9. 🐍 Get Python Script
     """)
     st.markdown("---")
     st.caption("Built with Streamlit 🚀")
@@ -69,18 +70,29 @@ if data:
     with st.expander("🔤 Categorical Columns"):
         st.dataframe(df[categorical].head(), use_container_width=True)
 
-    # ── Step 3: Duplicates ───────────────────────────────────────────────────
+    # ── Step 3: Drop ID Columns ─────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## 🗑️ Step 3 — Remove Duplicates")
+    st.markdown("## 🪪 Step 3 — Drop ID Columns")
+    df, id_cols = drop_id_columns(df)
+    numerical = df.select_dtypes(include=["int64", "float64"]).columns.to_list()
+    categorical = df.select_dtypes(include=["object", "string"]).columns.to_list()
+    if id_cols:
+        st.warning(f"🗑️ Dropped {len(id_cols)} ID column(s): {', '.join(id_cols)}")
+    else:
+        st.success("✅ No ID columns found.")
+
+    # ── Step 4: Duplicates ───────────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("## 🗑️ Step 4 — Remove Duplicates")
     df, n_dup = remove_duplicates(df)
     d1, d2 = st.columns(2)
     d1.metric("Duplicates Found", n_dup)
     d2.metric("Duplicates Remaining", 0, delta=f"-{n_dup}", delta_color="inverse")
     st.success("✅ No duplicate rows found!" if n_dup == 0 else f"✅ Removed {n_dup} duplicate rows.")
 
-    # ── Step 4: Missing Values ───────────────────────────────────────────────
+    # ── Step 5: Missing Values ───────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## 🩹 Step 4 — Handle Missing Values")
+    st.markdown("## 🩹 Step 5 — Handle Missing Values")
     df, cols_under_5, cols_over_5_num, cols_over_5_cat, missing_summary = handle_missing(df, numerical, categorical)
 
     with st.expander("📊 Missing Value Summary", expanded=True):
@@ -96,9 +108,9 @@ if data:
         st.info(f"🔤 Filled with **mode**: {', '.join(cols_over_5_cat)}")
     st.success(f"✅ Missing values remaining: {df.isna().sum().sum()}")
 
-    # ── Step 5: Outliers ─────────────────────────────────────────────────────
+    # ── Step 6: Outliers ─────────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## 📦 Step 5 — Detect & Remove Outliers")
+    st.markdown("## 📦 Step 6 — Detect & Remove Outliers")
     df_num_before = df.select_dtypes(include=["int64", "float64"])
     df, df_num, lower_bound, upper_bound, n_outliers = remove_outliers(df)
 
@@ -120,9 +132,9 @@ if data:
     o2.metric("Rows After", len(df), delta=f"-{n_outliers}", delta_color="inverse")
     st.success(f"✅ Removed {n_outliers} outlier rows.")
 
-    # ── Step 6: Categorical ──────────────────────────────────────────────────
+    # ── Step 7: Categorical ──────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## 🔤 Step 6 — Fix Categorical Columns")
+    st.markdown("## 🔤 Step 7 — Fix Categorical Columns")
     cat_tab1, cat_tab2 = st.tabs(["Before Cleaning", "After Cleaning"])
     with cat_tab1:
         for c in categorical:
@@ -135,9 +147,9 @@ if data:
                 st.write(f"**{c}:**", df[c].unique().tolist())
     st.success("✅ Categorical columns cleaned successfully!")
 
-    # ── Step 7: Download CSV ─────────────────────────────────────────────────
+    # ── Step 8: Download CSV ─────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## ⬇️ Step 7 — Download Cleaned Data")
+    st.markdown("## ⬇️ Step 8 — Download Cleaned Data")
     final_rows, final_cols = df.shape
     f1, f2, f3 = st.columns(3)
     f1.metric("Final Rows", final_rows)
@@ -156,9 +168,9 @@ if data:
         use_container_width=True,
     )
 
-    # ── Step 8: Python Script ────────────────────────────────────────────────
+    # ── Step 9: Python Script ────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("## 🐍 Step 8 — Get the Python Code")
+    st.markdown("## 🐍 Step 9 — Get the Python Code")
     st.write("Copy or download the equivalent Python script to reproduce this cleaning pipeline.")
 
     python_code = generate_cleaning_script(cols_under_5, cols_over_5_num, cols_over_5_cat, categorical)
