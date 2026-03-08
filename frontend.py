@@ -135,16 +135,30 @@ if data:
     # ── Step 7: Categorical ──────────────────────────────────────────────────
     st.markdown("---")
     st.markdown("## 🔤 Step 7 — Fix Categorical Columns")
-    cat_tab1, cat_tab2 = st.tabs(["Before Cleaning", "After Cleaning"])
-    with cat_tab1:
-        for c in categorical:
-            if c in df.columns:
-                st.write(f"**{c}:**", df[c].unique().tolist())
-    df = fix_categorical(df, categorical)
-    with cat_tab2:
-        for c in categorical:
-            if c in df.columns:
-                st.write(f"**{c}:**", df[c].unique().tolist())
+
+    if not categorical:
+        st.info("ℹ️ No categorical columns found.")
+    else:
+        st.write(f"Found **{len(categorical)}** categorical column(s): {', '.join([c for c in categorical if c in df.columns])}")
+
+        with st.expander("👁️ Before Cleaning — click to view unique values"):
+            for c in categorical:
+                if c in df.columns:
+                    vc = df[c].value_counts().reset_index()
+                    vc.columns = ["Value", "Count"]
+                    st.markdown(f"**{c}** — {df[c].nunique()} unique values")
+                    st.dataframe(vc, use_container_width=True, height=200)
+
+        df = fix_categorical(df, categorical)
+
+        with st.expander("✅ After Cleaning — click to view unique values"):
+            for c in categorical:
+                if c in df.columns:
+                    vc = df[c].value_counts().reset_index()
+                    vc.columns = ["Value", "Count"]
+                    st.markdown(f"**{c}** — {df[c].nunique()} unique values")
+                    st.dataframe(vc, use_container_width=True, height=200)
+
     st.success("✅ Categorical columns cleaned successfully!")
 
     # ── Step 8: Download CSV ─────────────────────────────────────────────────
