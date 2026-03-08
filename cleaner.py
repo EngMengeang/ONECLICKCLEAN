@@ -25,7 +25,10 @@ def handle_missing(df: pd.DataFrame, numerical: list, categorical: list):
 
     missing["Missing (%)"] = missing["Missing (%)"].str.replace("%", "").astype("float64")
 
-    cols_under_5 = missing[missing["Missing (%)"] < 5]["Column"].tolist()
+    # only columns that actually have some missing but < 5% → drop rows
+    cols_under_5 = missing[
+        (missing["Missing (%)"] > 0) & (missing["Missing (%)"] < 5)
+    ]["Column"].tolist()
     cols_over_5_num = missing[
         (missing["Missing (%)"] >= 5) & (missing["Column"].isin(numerical))
     ]["Column"].tolist()
@@ -33,8 +36,9 @@ def handle_missing(df: pd.DataFrame, numerical: list, categorical: list):
         (missing["Missing (%)"] >= 5) & (missing["Column"].isin(categorical))
     ]["Column"].tolist()
 
-    # drop rows for columns with < 5% missing
-    df = df.dropna(subset=cols_under_5)
+    # drop rows for columns with 0% < missing < 5%
+    if cols_under_5:
+        df = df.dropna(subset=cols_under_5)
 
     # fill numerical >= 5% with median
     for col in cols_over_5_num:
