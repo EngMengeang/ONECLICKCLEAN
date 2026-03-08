@@ -177,7 +177,7 @@ if data:
     st.download_button(
         label="⬇️ Download Cleaned CSV",
         data=cleaned_csv,
-        file_name="cleaned_data.csv",
+        file_name=f"{data.name.removesuffix('.csv')}_cleaned_data.csv",
         mime="text/csv",
         use_container_width=True,
     )
@@ -204,7 +204,7 @@ if data:
         st.download_button(
             label="⬇️ Download Cleaned CSV",
             data=cleaned_csv,
-            file_name="cleaned_data.csv",
+            file_name=f"{data.name.removesuffix('.csv')}_cleaned_data.csv",
             mime="text/csv",
             use_container_width=True,
             key="top_download_btn",
