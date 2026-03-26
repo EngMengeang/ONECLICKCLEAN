@@ -1,7 +1,11 @@
 import streamlit as st
 import pandas as pd
-from Data_Visualization.Categorical import render_categorical
-from Data_Visualization.Numerical import render_numerical
+try:
+    from oneclickclean.visualization.categorical import render_categorical
+    from oneclickclean.visualization.numerical import render_numerical
+except ModuleNotFoundError:
+    from visualization.categorical import render_categorical
+    from visualization.numerical import render_numerical
 
 
 def render_visualization():
